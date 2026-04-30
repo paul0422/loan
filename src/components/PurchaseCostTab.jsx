@@ -105,21 +105,37 @@ export default function PurchaseCostTab({ defaultPrice = 0 }) {
   const [isAdjusted, setIsAdjusted]    = useState(false)
 
   const result = useMemo(
-    () => calcPurchaseCost({ price: priceNum, ownership, isAdjusted }),
-    [priceNum, ownership, isAdjusted]
+    () => calcPurchaseCost({ price: priceNum, ownership, isAdjusted, houseType, area, isFirstHome }),
+    [priceNum, ownership, isAdjusted, houseType, area, isFirstHome]
   )
+
+  const acquisitionDesc = result
+    ? result.isOfficetel
+      ? '오피스텔 4% 적용'
+      : result.firstHomeDiscount > 0
+        ? `${(result.acquisitionRate * 100).toFixed(2)}% 적용 · 생애최초 ${formatKRW(result.firstHomeDiscount)} 감면`
+        : `${(result.acquisitionRate * 100).toFixed(2)}% 적용 · 주택가격 및 보유 주택 수 기준`
+    : ''
+
+  const ruralDesc = result
+    ? result.isRuralTaxExempt
+      ? '전용 85㎡ 이하 주택 비과세'
+      : result.isOfficetel
+        ? '오피스텔 0.2% 부과 (면적 무관)'
+        : '주택가격의 0.2% (전용 85㎡ 초과)'
+    : ''
 
   const items = result
     ? [
         {
           label: '취득세',
           value: result.acquisitionTax,
-          desc: `${(result.acquisitionRate * 100).toFixed(0)}% 적용 · 주택가격 및 보유 주택 수 기준`,
+          desc: acquisitionDesc,
         },
         {
           label: '농어촌특별세',
           value: result.ruralTax,
-          desc: '주택가격의 0.2%',
+          desc: ruralDesc,
         },
         {
           label: '지방교육세',
@@ -197,7 +213,16 @@ export default function PurchaseCostTab({ defaultPrice = 0 }) {
         {isFirstHome && (
           <div style={S.infoBox}>
             <span style={{ flexShrink: 0 }}>ℹ️</span>
-            <span>생애최초 주택구입 시 취득세 감면 혜택이 별도로 적용될 수 있습니다. 정확한 세액은 세무사 상담을 권장합니다.</span>
+            <span>
+              생애최초 주택구입 취득세 감면(12억 이하, 200만원 한도)이 자동 반영됩니다.
+              오피스텔·다주택은 적용되지 않으며, 3년 실거주 의무가 있습니다.
+            </span>
+          </div>
+        )}
+        {houseType === '오피스텔' && (
+          <div style={S.infoBox}>
+            <span style={{ flexShrink: 0 }}>ℹ️</span>
+            <span>오피스텔은 취득세 4% 단일 세율이 적용되며, 생애최초 감면 대상이 아닙니다.</span>
           </div>
         )}
       </section>
@@ -348,6 +373,7 @@ const S = {
     background: '#eff6ff', border: '1px solid #bfdbfe',
     borderRadius: 9, fontSize: 12, color: '#1e40af',
     alignItems: 'flex-start', lineHeight: 1.5,
+    marginBottom: 8,
   },
   placeholder: {
     display: 'flex', flexDirection: 'column',

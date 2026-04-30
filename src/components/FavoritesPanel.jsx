@@ -63,7 +63,7 @@ export default function FavoritesPanel({
               placeholder="아파트 이름 입력"
               value={saveName}
               onChange={e => setSaveName(e.target.value)}
-              onKeyPress={e => e.key === 'Enter' && handleSave()}
+              onKeyDown={e => e.key === 'Enter' && handleSave()}
             />
             <button
               style={{ ...S.btn, ...(canSave ? S.btnPrimary : S.btnDisabled) }}

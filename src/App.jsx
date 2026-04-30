@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { policyConfig } from './config/policy'
 import { resolveCollateralValue } from './services/priceService'
 import { calcLoan } from './lib/calcLoan'
@@ -44,17 +44,16 @@ export default function App() {
   // 탭
   const [activeTab, setActiveTab] = useState('loan')
 
-  // 즐겨찾기
-  const [favorites, setFavorites] = useState([])
+  // 즐겨찾기 — 초기값을 localStorage에서 즉시 로드 (race condition 방지)
+  const [favorites, setFavorites] = useState(() => getFavorites())
+  const isFirstRender = useRef(true)
 
-  // localStorage 초기화
+  // localStorage 동기화 — 첫 렌더에서는 저장 스킵
   useEffect(() => {
-    const saved = getFavorites()
-    setFavorites(saved)
-  }, [])
-
-  // localStorage 동기화
-  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false
+      return
+    }
     saveFavorites(favorites)
   }, [favorites])
 
@@ -83,7 +82,7 @@ export default function App() {
       baseRate: parseFloat(baseRate) || 0,
       years: yearsNum,
     })
-  }, [incomeNum, existingLoanNum, collateral, region, ownership, isFirstHome, isNewlywed, isYouth, baseRate, years])
+  }, [incomeNum, existingLoanNum, salePriceNum, collateral, region, ownership, isFirstHome, isNewlywed, isYouth, baseRate, years])
 
   // 즐겨찾기 핸들러들
   const handleSaveFavorite = (name) => {
