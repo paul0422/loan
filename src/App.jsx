@@ -147,7 +147,7 @@ export default function App() {
 
         <header style={S.header}>
           <div style={S.headerIcon}>🏠</div>
-          <h1 style={S.title}>부동산 금융 계산기</h1>
+          <h1 style={S.title}>🧮 주담대 계산기</h1>
           <p style={S.subtitle}>대출 한도 · 구매 비용을 한 번에 계산합니다</p>
         </header>
 
