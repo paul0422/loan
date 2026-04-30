@@ -4,7 +4,6 @@ import { resolveCollateralValue } from './services/priceService'
 import { calcLoan } from './lib/calcLoan'
 import PurchaseCostTab from './components/PurchaseCostTab'
 import FavoritesPanel from './components/FavoritesPanel'
-import AdSlot from './components/AdSlot'
 import GuideTab from './components/GuideTab'
 import { getFavorites, saveFavorites } from './services/favoritesService'
 import { useIsMobile } from './lib/useIsMobile'
@@ -392,8 +391,6 @@ export default function App() {
             )}
           </section>
         </div>}
-
-        <AdSlot />
 
         <footer style={S.footer}>
           본 계산기는 참고용이며, 실제 대출 조건은 금융기관 심사 결과에 따라 달라질 수 있습니다.
