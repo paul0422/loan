@@ -93,7 +93,7 @@ const CHART_COLORS = {
   기타비용:    '#94a3b8',
 }
 
-export default function PurchaseCostTab({ defaultPrice = 0 }) {
+export default function PurchaseCostTab({ defaultPrice = 0, isMobile = false }) {
   const defaultRaw = defaultPrice > 0 ? Math.round(defaultPrice / 1_000_000).toString() : ''
   const [price, priceChange, priceNum] = useMillionInput(defaultRaw)
   const [houseType, setHouseType]      = useState('아파트')
@@ -161,9 +161,12 @@ export default function PurchaseCostTab({ defaultPrice = 0 }) {
     : []
 
   return (
-    <div style={S.grid}>
+    <div style={{
+      ...S.grid,
+      ...(isMobile ? { gridTemplateColumns: '1fr', gap: 16 } : {}),
+    }}>
       {/* ── 입력 패널 ── */}
-      <section style={S.card}>
+      <section style={isMobile ? { ...S.card, borderRadius: 14, padding: '18px 16px' } : S.card}>
         <h2 style={S.cardTitle}>입력 정보</h2>
 
         <div style={S.sectionHeader}>주택 정보</div>
@@ -228,7 +231,7 @@ export default function PurchaseCostTab({ defaultPrice = 0 }) {
       </section>
 
       {/* ── 결과 패널 ── */}
-      <section style={S.card}>
+      <section style={isMobile ? { ...S.card, borderRadius: 14, padding: '18px 16px' } : S.card}>
         <h2 style={S.cardTitle}>구매 비용 내역</h2>
 
         {!result ? (

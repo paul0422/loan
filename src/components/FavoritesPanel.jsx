@@ -18,10 +18,13 @@ export default function FavoritesPanel({
   onRemoveFavorite,
   onSaveFavorite,
   salePriceNum,
+  isMobile = false,
 }) {
   const [saveName, setSaveName] = useState('')
   const [compareMode, setCompareMode] = useState(false)
   const [selectedForCompare, setSelectedForCompare] = useState([])
+  // 모바일에서는 기본 접힘 상태
+  const [isExpanded, setIsExpanded] = useState(!isMobile)
 
   const handleSave = () => {
     if (!saveName.trim()) return
@@ -42,13 +45,39 @@ export default function FavoritesPanel({
 
   const canSave = saveName.trim().length > 0 && salePriceNum > 0
 
+  const panelStyle = isMobile
+    ? {
+        ...S.panel,
+        width: '100%',
+        maxHeight: 'none',
+        borderLeft: 'none',
+        borderTop: '1px solid #e2e8f0',
+        padding: '14px 12px',
+      }
+    : S.panel
+
   return (
-    <div style={S.panel}>
-      {/* 헤더 */}
-      <div style={S.header}>
-        <div style={S.headerTitle}>⭐ 즐겨찾기</div>
-        <div style={S.headerSub}>{favorites.length}개 저장됨</div>
+    <div style={panelStyle}>
+      {/* 헤더 — 모바일에서는 클릭 시 접기/펼치기 */}
+      <div
+        style={{
+          ...S.header,
+          ...(isMobile ? { cursor: 'pointer', marginBottom: isExpanded ? 16 : 0, paddingBottom: isExpanded ? 16 : 0, borderBottom: isExpanded ? '2px solid #f1f5f9' : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' } : {}),
+        }}
+        onClick={() => isMobile && setIsExpanded(v => !v)}
+      >
+        <div>
+          <div style={S.headerTitle}>⭐ 즐겨찾기</div>
+          <div style={S.headerSub}>{favorites.length}개 저장됨</div>
+        </div>
+        {isMobile && (
+          <span style={{ fontSize: 18, color: '#64748b' }}>{isExpanded ? '▲' : '▼'}</span>
+        )}
       </div>
+
+      {isMobile && !isExpanded ? null : (
+      <>
+      {/* 본문 시작 */}
 
       {/* 저장 섹션 */}
       <div style={S.section}>
@@ -196,6 +225,8 @@ export default function FavoritesPanel({
           </div>
         )}
       </div>
+      </>
+      )}
     </div>
   )
 }

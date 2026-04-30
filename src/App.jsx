@@ -6,6 +6,7 @@ import PurchaseCostTab from './components/PurchaseCostTab'
 import FavoritesPanel from './components/FavoritesPanel'
 import AdSlot from './components/AdSlot'
 import { getFavorites, saveFavorites } from './services/favoritesService'
+import { useIsMobile } from './lib/useIsMobile'
 
 // ── 유틸 ──────────────────────────────────────────────────────
 function formatKRW(v) {
@@ -48,6 +49,9 @@ export default function App() {
   // 즐겨찾기 — 초기값을 localStorage에서 즉시 로드 (race condition 방지)
   const [favorites, setFavorites] = useState(() => getFavorites())
   const isFirstRender = useRef(true)
+
+  // 반응형
+  const isMobile = useIsMobile()
 
   // localStorage 동기화 — 첫 렌더에서는 저장 스킵
   useEffect(() => {
@@ -143,34 +147,49 @@ export default function App() {
   }
 
   return (
-    <div style={{ ...S.page, display: 'flex' }}>
-      <div style={{ ...S.container, flex: 1, overflowY: 'auto' }}>
+    <div style={{
+      ...S.page,
+      display: 'flex',
+      flexDirection: isMobile ? 'column' : 'row',
+    }}>
+      <div style={{
+        ...S.container,
+        flex: 1,
+        overflowY: isMobile ? 'visible' : 'auto',
+        padding: isMobile ? '20px 12px 24px' : '32px 16px',
+      }}>
 
-        <header style={S.header}>
-          <div style={S.headerIcon}>🏠</div>
-          <h1 style={S.title}>🧮 주담대 계산기</h1>
+        <header style={isMobile ? S.headerMobile : S.header}>
+          <div style={isMobile ? S.headerIconMobile : S.headerIcon}>🏠</div>
+          <h1 style={isMobile ? S.titleMobile : S.title}>🧮 주담대 계산기</h1>
           <p style={S.subtitle}>대출 한도 · 구매 비용을 한 번에 계산합니다</p>
         </header>
 
-        <div style={S.tabs}>
+        <div style={isMobile ? S.tabsMobile : S.tabs}>
           {[
             { key: 'loan', label: '🏦 대출 계산' },
             { key: 'cost', label: '🧾 구매 비용 계산' },
           ].map(t => (
             <button key={t.key}
-              style={activeTab === t.key ? S.tabActive : S.tab}
+              style={{
+                ...(activeTab === t.key ? S.tabActive : S.tab),
+                ...(isMobile ? { flex: 1, padding: '10px 8px', fontSize: 13 } : {}),
+              }}
               onClick={() => setActiveTab(t.key)}>
               {t.label}
             </button>
           ))}
         </div>
 
-        {activeTab === 'cost' && <PurchaseCostTab defaultPrice={salePriceNum} />}
+        {activeTab === 'cost' && <PurchaseCostTab defaultPrice={salePriceNum} isMobile={isMobile} />}
 
-        {activeTab === 'loan' && <div style={S.grid}>
+        {activeTab === 'loan' && <div style={{
+          ...S.grid,
+          ...(isMobile ? { gridTemplateColumns: '1fr', gap: 16 } : {}),
+        }}>
 
           {/* ── 입력 패널 ── */}
-          <section style={S.card}>
+          <section style={isMobile ? S.cardMobile : S.card}>
             <h2 style={S.cardTitle}>입력 정보</h2>
 
             <SectionHeader title="개인 정보" />
@@ -253,7 +272,7 @@ export default function App() {
           </section>
 
           {/* ── 결과 패널 ── */}
-          <section style={S.card}>
+          <section style={isMobile ? S.cardMobile : S.card}>
             <h2 style={S.cardTitle}>계산 결과</h2>
 
             {!result ? (
@@ -384,6 +403,7 @@ export default function App() {
         onRemoveFavorite={handleRemoveFavorite}
         onSaveFavorite={handleSaveFavorite}
         salePriceNum={salePriceNum}
+        isMobile={isMobile}
       />
     </div>
   )
@@ -535,8 +555,11 @@ const S = {
   },
   container: { maxWidth: 1140, margin: '0 auto', padding: '32px 16px' },
   header: { textAlign: 'center', marginBottom: 36 },
+  headerMobile: { textAlign: 'center', marginBottom: 20 },
   headerIcon: { fontSize: 48, marginBottom: 12 },
+  headerIconMobile: { fontSize: 36, marginBottom: 6 },
   title: { fontSize: 26, fontWeight: 700, color: '#1a202c', marginBottom: 8 },
+  titleMobile: { fontSize: 20, fontWeight: 700, color: '#1a202c', marginBottom: 4 },
   subtitle: { fontSize: 14, color: '#64748b' },
   grid: {
     display: 'grid',
@@ -549,6 +572,12 @@ const S = {
     borderRadius: 20,
     padding: '28px',
     boxShadow: '0 4px 24px rgba(0,0,0,0.07)',
+  },
+  cardMobile: {
+    background: '#fff',
+    borderRadius: 14,
+    padding: '18px 16px',
+    boxShadow: '0 2px 12px rgba(0,0,0,0.05)',
   },
   cardTitle: {
     fontSize: 17, fontWeight: 700, color: '#1a202c',
@@ -673,6 +702,11 @@ const S = {
     display: 'flex', gap: 6, margin: '0 auto 28px',
     background: '#fff', borderRadius: 14, padding: 5,
     boxShadow: '0 2px 8px rgba(0,0,0,0.06)', width: 'fit-content',
+  },
+  tabsMobile: {
+    display: 'flex', gap: 4, margin: '0 0 16px',
+    background: '#fff', borderRadius: 12, padding: 4,
+    boxShadow: '0 2px 8px rgba(0,0,0,0.06)', width: '100%',
   },
   tab: {
     padding: '10px 22px', fontSize: 14, fontWeight: 600,
