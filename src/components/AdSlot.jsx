@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 
 // 카카오 애드핏 광고 unit ID (없으면 광고 미노출)
 const AD_UNITS = {
-  pc:     '',                       // PC용 미등록
+  pc:     'DAN-HX9bfOQPZsFtvu1i',   // PC 728x90
   mobile: 'DAN-TPSBOFwnI3qKHtTt',   // 모바일 320x100
 }
 
