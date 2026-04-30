@@ -5,6 +5,7 @@ import { calcLoan } from './lib/calcLoan'
 import PurchaseCostTab from './components/PurchaseCostTab'
 import FavoritesPanel from './components/FavoritesPanel'
 import AdSlot from './components/AdSlot'
+import GuideTab from './components/GuideTab'
 import { getFavorites, saveFavorites } from './services/favoritesService'
 import { useIsMobile } from './lib/useIsMobile'
 
@@ -167,8 +168,9 @@ export default function App() {
 
         <div style={isMobile ? S.tabsMobile : S.tabs}>
           {[
-            { key: 'loan', label: '🏦 대출 계산' },
-            { key: 'cost', label: '🧾 구매 비용 계산' },
+            { key: 'loan',  label: isMobile ? '🏦 대출' : '🏦 대출 계산' },
+            { key: 'cost',  label: isMobile ? '🧾 비용' : '🧾 구매 비용 계산' },
+            { key: 'guide', label: isMobile ? '📖 가이드' : '📖 사용 가이드' },
           ].map(t => (
             <button key={t.key}
               style={{
@@ -181,7 +183,8 @@ export default function App() {
           ))}
         </div>
 
-        {activeTab === 'cost' && <PurchaseCostTab defaultPrice={salePriceNum} isMobile={isMobile} />}
+        {activeTab === 'cost'  && <PurchaseCostTab defaultPrice={salePriceNum} isMobile={isMobile} />}
+        {activeTab === 'guide' && <GuideTab isMobile={isMobile} />}
 
         {activeTab === 'loan' && <div style={{
           ...S.grid,
