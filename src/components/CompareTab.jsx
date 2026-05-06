@@ -335,7 +335,7 @@ export default function CompareTab({ isMobile, defaultIncome = 0, defaultSalePri
           </div>
         )}
 
-        <div style={{ display: 'flex', gap: 16, flexDirection: isMobile ? 'column' : 'row', marginTop: 16, alignItems: 'flex-start' }}>
+        <div style={{ display: 'flex', gap: 16, flexDirection: isMobile ? 'column' : 'row', marginTop: 16, alignItems: isMobile ? 'stretch' : 'flex-start' }}>
           <LoanCard result={loanResult} salePriceNum={salePriceNum} collateral={collateral} isBetter={loanBetter} />
           <DidimdolCard result={didimdolResult} salePriceNum={salePriceNum} collateral={collateral} isBetter={didimdolBetter} />
         </div>
