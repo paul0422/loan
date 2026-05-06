@@ -250,7 +250,7 @@ export default function CompareTab({ isMobile, defaultIncome = 0, defaultSalePri
 
       <SectionHeader title="공통 — 소득 · 주택 정보" />
       <div style={S.fg}>
-        <Label text="부부합산 연소득" required />
+        <Label text="연소득 (신혼부부는 부부합산)" required />
         <MoneyInput raw={income} onChange={incomeChange} placeholder="예: 60" />
       </div>
       <div style={S.fg}>

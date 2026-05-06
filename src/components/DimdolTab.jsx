@@ -134,7 +134,7 @@ export default function DimdolTab({ isMobile, defaultIncome = 0, defaultSalePric
 
         <SectionHeader title="소득 정보" />
         <div style={S.fg}>
-          <Label text="부부합산 연소득" required />
+          <Label text="연소득 (신혼부부는 부부합산)" required />
           <MoneyInput raw={income} onChange={incomeChange} placeholder="예: 50" />
         </div>
 
