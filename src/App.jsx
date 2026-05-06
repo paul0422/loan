@@ -9,7 +9,7 @@ export default function App() {
   const isMobile = useIsMobile()
 
   const tabs = [
-    { key: 'compare', label: isMobile ? '⚖️ 비교' : '⚖️ 상품 비교' },
+    { key: 'compare', label: isMobile ? '⚖️ 비교' : '⚖️ 대출 상품 비교' },
     { key: 'cost',    label: isMobile ? '🧾 비용' : '🧾 구매 비용 계산' },
     { key: 'guide',   label: isMobile ? '📖 가이드' : '📖 사용 가이드' },
   ]
