@@ -84,8 +84,9 @@ function formatKRW(v) {
   return '₩' + Math.round(v).toLocaleString('ko-KR')
 }
 
-function useMillionInput(init = '') {
-  const [raw, setRaw] = useState(init)
+function useMillionInput(initNum = 0) {
+  const initRaw = initNum > 0 ? String(Math.round(initNum / 1_000_000)) : ''
+  const [raw, setRaw] = useState(initRaw)
   const num = raw === '' ? 0 : Math.round((parseFloat(raw) || 0) * 1_000_000)
   const onChange = e => setRaw(e.target.value.replace(/[^0-9.]/g, ''))
   return [raw, onChange, num, setRaw]
@@ -171,11 +172,11 @@ function DetailRow({ label, value, valueColor, border }) {
 }
 
 // ── 메인 컴포넌트 ─────────────────────────────────────────────────
-export default function DimdolTab({ isMobile }) {
-  const [income, incomeChange, incomeNum] = useMillionInput()
-  const [salePrice, salePriceChange, salePriceNum]           = useMillionInput()
-  const [kbPrice, kbPriceChange, kbPriceNum]                 = useMillionInput()
-  const [appraisalPrice, appraisalPriceChange, appraisalNum] = useMillionInput()
+export default function DimdolTab({ isMobile, defaultIncome = 0, defaultSalePrice = 0, defaultKbPrice = 0, defaultAppraisalPrice = 0 }) {
+  const [income, incomeChange, incomeNum] = useMillionInput(defaultIncome)
+  const [salePrice, salePriceChange, salePriceNum]           = useMillionInput(defaultSalePrice)
+  const [kbPrice, kbPriceChange, kbPriceNum]                 = useMillionInput(defaultKbPrice)
+  const [appraisalPrice, appraisalPriceChange, appraisalNum] = useMillionInput(defaultAppraisalPrice)
   const [years, setYears]             = useState(30)
   const [isFirstHome, setIsFirstHome] = useState(false)
   const [isNewlywed, setIsNewlywed]   = useState(false)

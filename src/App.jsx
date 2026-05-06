@@ -184,7 +184,15 @@ export default function App() {
           ))}
         </div>
 
-        {activeTab === 'didimdol' && <DimdolTab isMobile={isMobile} />}
+        {activeTab === 'didimdol' && (
+          <DimdolTab
+            isMobile={isMobile}
+            defaultIncome={incomeNum}
+            defaultSalePrice={salePriceNum}
+            defaultKbPrice={kbPriceNum}
+            defaultAppraisalPrice={appraisalPriceNum}
+          />
+        )}
         {activeTab === 'cost'     && <PurchaseCostTab defaultPrice={salePriceNum} isMobile={isMobile} />}
         {activeTab === 'guide'    && <GuideTab isMobile={isMobile} />}
 
