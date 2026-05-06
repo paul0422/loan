@@ -28,7 +28,7 @@
     .ad-pc { display: inline-block; }
     .ad-mobile { display: none; }
     @media (max-width: 767px) {
-      .ad-pc { display: none; }
+      .ad-pc { display: none !important; }
       .ad-mobile { display: inline-block; }
     }
   </style>
@@ -36,7 +36,7 @@
 <body>
   <div id="root"></div>
 
-  <!-- 카카오 애드핏 광고 (정적 삽입 - 심사 봇 감지용) -->
+  <!-- 카카오 애드핏 광고 -->
   <div class="ad-footer">
     <ins class="kakao_ad_area ad-pc" style="display:none;"
          data-ad-unit="DAN-HX9bfOQPZsFtvu1i"
@@ -47,6 +47,13 @@
          data-ad-width="320"
          data-ad-height="100"></ins>
   </div>
+  <script>
+    (function () {
+      var isMobile = window.innerWidth <= 767;
+      var el = document.querySelector(isMobile ? '.ad-pc' : '.ad-mobile');
+      if (el) el.remove();
+    })();
+  </script>
   <script type="text/javascript" src="//t1.daumcdn.net/kas/static/ba.min.js" async></script>
 
   <script type="module" src="/src/main.jsx"></script>
