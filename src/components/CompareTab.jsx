@@ -84,59 +84,179 @@ function CheckItem({ label, checked, onChange, sub }) {
   )
 }
 
-// ── 비교 결과 카드 ────────────────────────────────────────────────
-function CompareCard({ title, icon, color, result, salePriceNum, isIneligible, ineligibleReason, isBetter, betterLabel }) {
-  const borderColor = isBetter ? '#22c55e' : '#e2e8f0'
+// ── 공통 서브 컴포넌트 ────────────────────────────────────────────
+function DetailRow({ label, value, valueColor, border }) {
   return (
-    <div style={{ flex: 1, background: '#fff', borderRadius: 16, border: `2px solid ${borderColor}`, padding: '20px', position: 'relative', minWidth: 0 }}>
-      {isBetter && (
-        <div style={{ position: 'absolute', top: -13, left: '50%', transform: 'translateX(-50%)', background: '#22c55e', color: '#fff', fontSize: 11, fontWeight: 700, borderRadius: 20, padding: '3px 12px', whiteSpace: 'nowrap' }}>
-          {betterLabel}
-        </div>
-      )}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-        <span style={{ fontSize: 20 }}>{icon}</span>
-        <span style={{ fontSize: 15, fontWeight: 700, color }}>{title}</span>
-      </div>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', ...(border ? { borderTop: '1px dashed #e2e8f0', paddingTop: 8, marginTop: 4 } : {}) }}>
+      <span style={{ fontSize: 11, color: '#64748b' }}>{label}</span>
+      <span style={{ fontSize: 11, fontWeight: 700, color: valueColor || '#1a202c' }}>{value}</span>
+    </div>
+  )
+}
 
-      {isIneligible ? (
-        <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 12, padding: '16px', textAlign: 'center' }}>
-          <div style={{ fontSize: 24, marginBottom: 8 }}>🚫</div>
-          <div style={{ fontSize: 13, fontWeight: 700, color: '#991b1b', marginBottom: 4 }}>자격 미충족</div>
-          <div style={{ fontSize: 12, color: '#7f1d1d' }}>{ineligibleReason}</div>
-        </div>
+function DetailCard({ badge, badgeColor, badgeBg, title, children }) {
+  return (
+    <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: '12px 14px', marginBottom: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+        <span style={{ fontSize: 10, fontWeight: 700, color: badgeColor, background: badgeBg, borderRadius: 5, padding: '2px 6px' }}>{badge}</span>
+        <span style={{ fontSize: 11, color: '#64748b', fontWeight: 500 }}>{title}</span>
+      </div>
+      {children}
+    </div>
+  )
+}
+
+function Alert({ type, text }) {
+  const map = { success: { bg: '#f0fdf4', border: '#bbf7d0', color: '#166534' }, warning: { bg: '#fffbeb', border: '#fde68a', color: '#92400e' }, danger: { bg: '#fef2f2', border: '#fecaca', color: '#991b1b' }, info: { bg: '#eff6ff', border: '#bfdbfe', color: '#1e40af' } }
+  const icons = { success: '✅', warning: '⚠️', danger: '🚫', info: 'ℹ️' }
+  const c = map[type]
+  return (
+    <div style={{ display: 'flex', gap: 8, padding: '9px 12px', borderRadius: 8, marginBottom: 8, fontSize: 11, lineHeight: 1.5, background: c.bg, border: `1px solid ${c.border}`, color: c.color }}>
+      <span style={{ flexShrink: 0 }}>{icons[type]}</span><span>{text}</span>
+    </div>
+  )
+}
+
+// ── 일반 주담대 결과 카드 ─────────────────────────────────────────
+function LoanCard({ result, salePriceNum, collateral, isBetter }) {
+  const DSR = 0.4
+  return (
+    <div style={{ flex: 1, background: '#fff', borderRadius: 16, border: `2px solid ${isBetter ? '#22c55e' : '#e2e8f0'}`, padding: '20px', position: 'relative', minWidth: 0 }}>
+      {isBetter && <BetterBadge label="한도 유리" />}
+      <CardTitle icon="🏦" title="일반 주담대" color="#1e40af" />
+
+      {result?.blocked ? (
+        <IneligibleBox reason="DSR 한도 초과: 기존 대출 상환액이 연소득의 40%를 초과합니다" />
       ) : !result ? (
-        <div style={{ textAlign: 'center', color: '#94a3b8', padding: '20px 0', fontSize: 13 }}>계산 불가</div>
+        <EmptyBox />
       ) : (
         <>
-          <div style={{ background: `linear-gradient(135deg, ${color} 0%, ${color}cc 100%)`, borderRadius: 12, padding: '16px', textAlign: 'center', marginBottom: 14 }}>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.8)', marginBottom: 4 }}>최대 대출 금액</div>
-            <div style={{ fontSize: 24, fontWeight: 800, color: '#fff', letterSpacing: '-0.02em' }}>
-              {result.blocked ? '대출 불가' : formatKRW(result.loanAmount ?? result.finalAmount)}
-            </div>
+          {result.explanations.map((e, i) => <Alert key={i} type={e.type} text={e.text} />)}
+
+          <MainAmountBox color="#1e40af" amount={result.finalAmount} monthly={result.monthlyPayment} />
+
+          <div style={S2.summaryGrid}>
+            <SummaryItem label="담보가액" value={formatKRW(collateral?.value)} sub={`${collateral?.source} 기준`} />
+            <SummaryItem label="적용 LTV" value={`${Math.round(result.ltvRatio * 100)}%`} sub={result.ltvCapped ? '6억 상한 적용' : ''} />
+            <SummaryItem label="최종 금리" value={`${result.finalRate.toFixed(2)}%`} sub={result.rateDiscount < 0 ? `우대 ${result.rateDiscount}%p` : '우대 없음'} highlight={result.rateDiscount < 0} />
+            <SummaryItem label="DSR 한도" value={`${Math.round(DSR * 100)}%`} sub={`연 ${formatKRW(result.annualAllowable)}`} />
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <Row label="적용 금리" value={`${result.finalRate?.toFixed(2)}%`} />
-            <Row label="월 상환액" value={formatKRW(result.monthlyPayment)} />
-            {salePriceNum > 0 && (
-              <Row label="필요 자기자본"
-                value={formatKRW(Math.max(0, salePriceNum - (result.loanAmount ?? result.finalAmount ?? 0)))}
-                highlight />
-            )}
-            <Row label="한도 결정 요인" value={result.limitedBy ?? (result.blocked ? 'DSR 초과' : result.limitedBy)} />
+          <DetailCard badge="LTV" badgeColor="#059669" badgeBg="#dcfce7" title="담보인정비율 기준">
+            <DetailRow label="담보가액" value={formatKRW(collateral?.value)} />
+            <DetailRow label={`LTV ${Math.round(result.ltvRatio * 100)}% 적용`} value={formatKRW(result.ltvAmount)} valueColor="#059669" border />
+            {result.ltvCapped && <DetailRow label="생애최초 한도 상한" value="6억원 (규제지역)" valueColor="#d97706" />}
+          </DetailCard>
+
+          <DetailCard badge="DSR" badgeColor="#1d4ed8" badgeBg="#dbeafe" title="총부채원리금상환비율 기준">
+            <DetailRow label={`연간 상환 가능액 (소득 × ${Math.round(DSR * 100)}%)`} value={formatKRW(result.annualAllowable)} />
+            <DetailRow label="기존 대출 연간 상환액" value={result.existingAnnual > 0 ? `- ${formatKRW(result.existingAnnual)}` : '없음'} valueColor={result.existingAnnual > 0 ? '#ef4444' : '#94a3b8'} />
+            <DetailRow label="신규 대출 월 상환 가능액" value={result.remainingMonthly <= 0 ? '불가' : formatKRW(result.remainingMonthly)} valueColor={result.remainingMonthly <= 0 ? '#ef4444' : '#0369a1'} />
+            <DetailRow label="DSR 기준 한도" value={formatKRW(result.dsrAmount)} valueColor="#1d4ed8" border />
+          </DetailCard>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', background: '#f1f5f9', borderRadius: 8, marginBottom: 12 }}>
+            <span>{result.limitedBy === 'LTV' ? '🔒' : '📉'}</span>
+            <span style={{ fontSize: 12, color: '#475569', fontWeight: 500 }}><strong>{result.limitedBy}</strong> 기준이 최종 한도를 결정했습니다</span>
           </div>
+
+          {salePriceNum > 0 && <EquityBox salePriceNum={salePriceNum} loanAmount={result.finalAmount} monthly={result.monthlyPayment} />}
         </>
       )}
     </div>
   )
 }
 
-function Row({ label, value, highlight }) {
+// ── 디딤돌 결과 카드 ──────────────────────────────────────────────
+function DidimdolCard({ result, salePriceNum, collateral, isBetter }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 10px', background: '#f8fafc', borderRadius: 8 }}>
-      <span style={{ fontSize: 12, color: '#64748b' }}>{label}</span>
-      <span style={{ fontSize: 13, fontWeight: 700, color: highlight ? '#1e40af' : '#1a202c' }}>{value}</span>
+    <div style={{ flex: 1, background: '#fff', borderRadius: 16, border: `2px solid ${isBetter ? '#22c55e' : '#e2e8f0'}`, padding: '20px', position: 'relative', minWidth: 0 }}>
+      {isBetter && <BetterBadge label="금리 유리" />}
+      <CardTitle icon="🏛️" title="디딤돌 대출" color="#0369a1" />
+
+      {result?.ineligible ? (
+        <IneligibleBox reason={result.reason} />
+      ) : !result ? (
+        <EmptyBox />
+      ) : (
+        <>
+          <MainAmountBox color="#0369a1" amount={result.loanAmount} monthly={result.monthlyPayment} />
+
+          <div style={S2.summaryGrid}>
+            <SummaryItem label="적용 금리" value={`${result.finalRate.toFixed(2)}%`} sub={result.discount > 0 ? `우대 -${result.discount.toFixed(1)}%p` : '우대 없음'} highlight={result.discount > 0} />
+            <SummaryItem label="금리 유형" value={result.rateType} sub={result.rateType === '우대' ? '생애최초·신혼' : '일반'} />
+            <SummaryItem label="LTV 한도" value={formatKRW(result.ltvLimit)} sub="담보가액 × 70%" />
+            <SummaryItem label="상품 한도" value={formatKRW(result.productCap)} sub={result.limitedBy === 'LTV' ? 'LTV 기준 적용' : '상품한도 적용'} />
+          </div>
+
+          <DetailCard badge="금리" badgeColor="#1d4ed8" badgeBg="#dbeafe" title="기본금리 + 우대할인">
+            <DetailRow label={`기본금리 (${result.rateType})`} value={`${result.baseRate.toFixed(2)}%`} />
+            {result.discounts.map((d, i) => (
+              <DetailRow key={i} label={d.replace(/-[\d.]+%p$/, '').trim()} value={`-${d.match(/[\d.]+%p/)?.[0] ?? ''}`} valueColor="#059669" />
+            ))}
+            <DetailRow label="최종 적용 금리" value={`${result.finalRate.toFixed(2)}%`} valueColor="#1d4ed8" border />
+          </DetailCard>
+
+          <DetailCard badge="한도" badgeColor="#059669" badgeBg="#dcfce7" title="LTV 70% vs 상품 한도">
+            <DetailRow label="담보가액" value={formatKRW(collateral?.value)} />
+            <DetailRow label="LTV 70% 적용" value={formatKRW(result.ltvLimit)} />
+            <DetailRow label="상품 한도" value={formatKRW(result.productCap)} />
+            <DetailRow label={`최종 한도 (${result.limitedBy} 기준)`} value={formatKRW(result.loanAmount)} valueColor="#059669" border />
+          </DetailCard>
+
+          {salePriceNum > 0 && <EquityBox salePriceNum={salePriceNum} loanAmount={result.loanAmount} monthly={result.monthlyPayment} />}
+
+          <div style={{ fontSize: 10, color: '#94a3b8', lineHeight: 1.5 }}>* DTI 60% 이내 별도 심사 적용</div>
+        </>
+      )}
+    </div>
+  )
+}
+
+// ── 공용 블록 ─────────────────────────────────────────────────────
+function BetterBadge({ label }) {
+  return <div style={{ position: 'absolute', top: -13, left: '50%', transform: 'translateX(-50%)', background: '#22c55e', color: '#fff', fontSize: 11, fontWeight: 700, borderRadius: 20, padding: '3px 12px', whiteSpace: 'nowrap' }}>{label}</div>
+}
+function CardTitle({ icon, title, color }) {
+  return <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14, paddingBottom: 12, borderBottom: '2px solid #f1f5f9' }}><span style={{ fontSize: 20 }}>{icon}</span><span style={{ fontSize: 15, fontWeight: 700, color }}>{title}</span></div>
+}
+function IneligibleBox({ reason }) {
+  return <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 12, padding: '20px', textAlign: 'center' }}><div style={{ fontSize: 28, marginBottom: 8 }}>🚫</div><div style={{ fontSize: 13, fontWeight: 700, color: '#991b1b', marginBottom: 4 }}>자격 미충족</div><div style={{ fontSize: 12, color: '#7f1d1d' }}>{reason}</div></div>
+}
+function EmptyBox() {
+  return <div style={{ textAlign: 'center', color: '#94a3b8', padding: '20px 0', fontSize: 13 }}>계산 불가</div>
+}
+function MainAmountBox({ color, amount, monthly }) {
+  return (
+    <div style={{ background: `linear-gradient(135deg, ${color} 0%, ${color}bb 100%)`, borderRadius: 12, padding: '16px', textAlign: 'center', marginBottom: 12 }}>
+      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.8)', marginBottom: 4 }}>최대 대출 금액</div>
+      <div style={{ fontSize: 24, fontWeight: 800, color: '#fff', letterSpacing: '-0.02em', marginBottom: 4 }}>{formatKRW(amount)}</div>
+      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)' }}>월 상환액 {formatKRW(monthly)} · 원리금균등</div>
+    </div>
+  )
+}
+function SummaryItem({ label, value, sub, highlight }) {
+  return (
+    <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: '10px 12px' }}>
+      <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600, marginBottom: 4 }}>{label}</div>
+      <div style={{ fontSize: 15, fontWeight: 700, color: highlight ? '#dc2626' : '#1a202c' }}>{value}</div>
+      {sub && <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 2 }}>{sub}</div>}
+    </div>
+  )
+}
+function EquityBox({ salePriceNum, loanAmount, monthly }) {
+  return (
+    <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: 12, padding: '14px', marginBottom: 12 }}>
+      <div style={{ fontSize: 10, fontWeight: 700, color: '#64748b', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}>필요한 금액</div>
+      <DetailRow label="매매가" value={formatKRW(salePriceNum)} />
+      <DetailRow label="최대 대출금액" value={`- ${formatKRW(loanAmount)}`} valueColor="#ef4444" />
+      <div style={{ height: 1, background: '#e2e8f0', margin: '6px 0' }} />
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span style={{ fontSize: 13, fontWeight: 700, color: '#1a202c' }}>필요 자기자본</span>
+        <span style={{ fontSize: 20, fontWeight: 800, color: '#1e40af', letterSpacing: '-0.02em' }}>{formatKRW(Math.max(0, salePriceNum - loanAmount))}</span>
+      </div>
+      <div style={{ height: 1, background: '#e2e8f0', margin: '6px 0' }} />
+      <DetailRow label="월 상환액" value={formatKRW(monthly)} />
     </div>
   )
 }
@@ -207,7 +327,6 @@ export default function CompareTab({ isMobile, defaultIncome = 0, defaultSalePri
       <div>
         <button onClick={() => setShowResult(false)} style={S.backBtn}>← 다시 입력</button>
 
-        {/* 요약 배너 */}
         {loanResult && didimdolResult && !didimdolResult.ineligible && !loanResult.blocked && (
           <div style={S.summaryBanner}>
             {didimdolResult.finalRate < (loanResult.finalRate ?? 99)
@@ -216,28 +335,12 @@ export default function CompareTab({ isMobile, defaultIncome = 0, defaultSalePri
           </div>
         )}
 
-        <div style={{ display: 'flex', gap: 16, flexDirection: isMobile ? 'column' : 'row', marginTop: 16 }}>
-          <CompareCard
-            title="일반 주담대" icon="🏦" color="#1e40af"
-            result={loanResult ? { ...loanResult, loanAmount: loanResult.finalAmount } : null}
-            salePriceNum={salePriceNum}
-            isIneligible={loanResult?.blocked}
-            ineligibleReason="DSR 한도 초과"
-            isBetter={loanBetter}
-            betterLabel="한도 유리"
-          />
-          <CompareCard
-            title="디딤돌 대출" icon="🏛️" color="#0369a1"
-            result={didimdolResult?.ineligible ? null : didimdolResult}
-            salePriceNum={salePriceNum}
-            isIneligible={didimdolResult?.ineligible}
-            ineligibleReason={didimdolResult?.reason}
-            isBetter={didimdolBetter}
-            betterLabel="금리 유리"
-          />
+        <div style={{ display: 'flex', gap: 16, flexDirection: isMobile ? 'column' : 'row', marginTop: 16, alignItems: 'flex-start' }}>
+          <LoanCard result={loanResult} salePriceNum={salePriceNum} collateral={collateral} isBetter={loanBetter} />
+          <DidimdolCard result={didimdolResult} salePriceNum={salePriceNum} collateral={collateral} isBetter={didimdolBetter} />
         </div>
 
-        <div style={{ marginTop: 16, fontSize: 11, color: '#94a3b8', textAlign: 'center', lineHeight: 1.6 }}>
+        <div style={{ marginTop: 12, fontSize: 11, color: '#94a3b8', textAlign: 'center', lineHeight: 1.6 }}>
           * 실제 대출 조건은 금융기관 심사 결과에 따라 달라질 수 있습니다
         </div>
       </div>
@@ -344,6 +447,10 @@ export default function CompareTab({ isMobile, defaultIncome = 0, defaultSalePri
 }
 
 // ── 스타일 ────────────────────────────────────────────────────────
+const S2 = {
+  summaryGrid: { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, marginBottom: 12 },
+}
+
 const S = {
   card:       { background: '#fff', borderRadius: 20, padding: '28px', boxShadow: '0 4px 24px rgba(0,0,0,0.07)', maxWidth: 600, margin: '0 auto' },
   cardMobile: { background: '#fff', borderRadius: 14, padding: '18px 16px', boxShadow: '0 2px 12px rgba(0,0,0,0.05)' },
