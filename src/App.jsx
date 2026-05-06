@@ -6,6 +6,7 @@ import PurchaseCostTab from './components/PurchaseCostTab'
 import FavoritesPanel from './components/FavoritesPanel'
 import GuideTab from './components/GuideTab'
 import DimdolTab from './components/DimdolTab'
+import CompareTab from './components/CompareTab'
 import { getFavorites, saveFavorites } from './services/favoritesService'
 import { useIsMobile } from './lib/useIsMobile'
 
@@ -42,7 +43,7 @@ export default function App() {
 
   // 대출 조건
   const [baseRate, setBaseRate] = useState('')
-  const [years,    setYears   ] = useState('')
+  const [years,    setYears   ] = useState(30)
 
   // 탭
   const [activeTab, setActiveTab] = useState('loan')
@@ -75,9 +76,7 @@ export default function App() {
   const showKbWarning = !noPriceInput && kbPriceNum === 0 && appraisalPriceNum === 0
 
   const result = useMemo(() => {
-    if (!incomeNum || !salePriceNum || !baseRate || !years || !collateral) return null
-    const yearsNum = parseInt(years)
-    if (!yearsNum || yearsNum <= 0) return null
+    if (!incomeNum || !salePriceNum || !baseRate || !collateral) return null
 
     return calcLoan({
       income: incomeNum,
@@ -86,7 +85,7 @@ export default function App() {
       region, ownership,
       isFirstHome, isNewlywed, isYouth,
       baseRate: parseFloat(baseRate) || 0,
-      years: yearsNum,
+      years,
     })
   }, [incomeNum, existingLoanNum, salePriceNum, collateral, region, ownership, isFirstHome, isNewlywed, isYouth, baseRate, years])
 
@@ -103,7 +102,7 @@ export default function App() {
         income: incomeNum,
         existingLoan: existingLoanNum,
         baseRate: parseFloat(baseRate) || 0,
-        years: parseInt(years) || 0,
+        years,
         region,
         ownership,
         isFirstHome,
@@ -140,7 +139,7 @@ export default function App() {
     setIsYouth(inputs.isYouth)
 
     setBaseRate(inputs.baseRate.toString())
-    setYears(inputs.years.toString())
+    setYears([10, 15, 20, 30].includes(inputs.years) ? inputs.years : 30)
   }
 
   const handleRemoveFavorite = (id) => {
@@ -168,10 +167,11 @@ export default function App() {
 
         <div style={isMobile ? S.tabsMobile : S.tabs}>
           {[
-            { key: 'loan',    label: isMobile ? '🏦 대출' : '🏦 대출 계산' },
+            { key: 'loan',     label: isMobile ? '🏦 대출' : '🏦 대출 계산' },
             { key: 'didimdol', label: isMobile ? '🏛️ 디딤돌' : '🏛️ 디딤돌 대출' },
-            { key: 'cost',    label: isMobile ? '🧾 비용' : '🧾 구매 비용 계산' },
-            { key: 'guide',   label: isMobile ? '📖 가이드' : '📖 사용 가이드' },
+            { key: 'compare',  label: isMobile ? '⚖️ 비교' : '⚖️ 상품 비교' },
+            { key: 'cost',     label: isMobile ? '🧾 비용' : '🧾 구매 비용 계산' },
+            { key: 'guide',    label: isMobile ? '📖 가이드' : '📖 사용 가이드' },
           ].map(t => (
             <button key={t.key}
               style={{
@@ -191,6 +191,20 @@ export default function App() {
             defaultSalePrice={salePriceNum}
             defaultKbPrice={kbPriceNum}
             defaultAppraisalPrice={appraisalPriceNum}
+          />
+        )}
+        {activeTab === 'compare' && (
+          <CompareTab
+            isMobile={isMobile}
+            defaultIncome={incomeNum}
+            defaultSalePrice={salePriceNum}
+            defaultKbPrice={kbPriceNum}
+            defaultAppraisalPrice={appraisalPriceNum}
+            defaultYears={years}
+            defaultRegion={region}
+            defaultOwnership={ownership}
+            defaultIsFirstHome={isFirstHome}
+            defaultIsNewlywed={isNewlywed}
           />
         )}
         {activeTab === 'cost'     && <PurchaseCostTab defaultPrice={salePriceNum} isMobile={isMobile} />}
@@ -275,10 +289,18 @@ export default function App() {
               </div>
               <div style={{ ...S.fg, flex: 1 }}>
                 <Label text="대출 기간" required />
-                <div style={S.iw}>
-                  <input style={S.inp} type="number" min="1" max="50"
-                    placeholder="예: 30" value={years} onChange={e => setYears(e.target.value)} />
-                  <span style={S.unit}>년</span>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {[10, 15, 20, 30].map(y => (
+                    <button key={y}
+                      style={{
+                        flex: 1, padding: '9px 0', fontSize: 13, fontWeight: 600,
+                        border: `1.5px solid ${years === y ? '#3b82f6' : '#e2e8f0'}`,
+                        borderRadius: 8, cursor: 'pointer', fontFamily: 'inherit',
+                        background: years === y ? '#eff6ff' : '#f8fafc',
+                        color: years === y ? '#1d4ed8' : '#64748b',
+                      }}
+                      onClick={() => setYears(y)}>{y}년</button>
+                  ))}
                 </div>
               </div>
             </div>
