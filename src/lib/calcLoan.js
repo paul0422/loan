@@ -14,11 +14,18 @@ export function calcLoan(inputs, policy = policyConfig) {
   let ltvRatio
   if (isFirstHome) {
     ltvRatio = policy.LTV.생애최초
-    explanations.push({ type: 'success', text: '생애최초 혜택으로 LTV 80% 적용' })
+    const cap = policy.LTV.생애최초한도[region]
+    if (cap < Infinity) {
+      explanations.push({ type: 'success', text: `생애최초 혜택으로 LTV 80% 적용 (${region} 최대 ${(cap / 1_0000_0000).toFixed(0)}억원 한도)` })
+    } else {
+      explanations.push({ type: 'success', text: '생애최초 혜택으로 LTV 80% 적용' })
+    }
   } else {
     ltvRatio = policy.LTV[region][ownership]
   }
-  const ltvAmount = collateralValue * ltvRatio
+  const ltvAmountRaw = collateralValue * ltvRatio
+  const firstHomeCap = isFirstHome ? policy.LTV.생애최초한도[region] : Infinity
+  const ltvAmount = Math.min(ltvAmountRaw, firstHomeCap)
 
   // 2. 금리 우대 계산
   let rateDiscount = 0
@@ -73,6 +80,7 @@ export function calcLoan(inputs, policy = policyConfig) {
 
   return {
     ltvRatio, ltvAmount,
+    ltvCapped: isFirstHome && ltvAmountRaw > firstHomeCap,
     dsrAmount: Math.max(0, dsrAmount),
     finalRate, rateDiscount, finalAmount,
     monthlyPayment, annualAllowable,

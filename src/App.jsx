@@ -332,6 +332,9 @@ export default function App() {
                   <DetailRow label="담보가액" value={formatKRW(collateral?.value)} />
                   <DetailRow label={`LTV ${Math.round(result.ltvRatio * 100)}% 적용`}
                     value={formatKRW(result.ltvAmount)} valueColor="#059669" border />
+                  {result.ltvCapped && (
+                    <DetailRow label="생애최초 한도 상한 적용" value="6억원 (규제지역)" valueColor="#d97706" />
+                  )}
                 </div>
 
                 <div style={S.detailCard}>
