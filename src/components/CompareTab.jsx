@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { resolveCollateralValue } from '../services/priceService'
 import { calcLoan } from '../lib/calcLoan'
 import { calcDidimdol } from '../lib/calcDidimdol'
@@ -262,7 +262,7 @@ function EquityBox({ salePriceNum, loanAmount, monthly }) {
 }
 
 // ── 메인 컴포넌트 ─────────────────────────────────────────────────
-export default function CompareTab({ isMobile, defaultIncome = 0, defaultSalePrice = 0, defaultKbPrice = 0, defaultAppraisalPrice = 0, defaultYears = 30, defaultRegion = '규제지역', defaultOwnership = '무주택', defaultIsFirstHome = false, defaultIsNewlywed = false }) {
+export default function CompareTab({ isMobile, onSalePriceChange, defaultIncome = 0, defaultSalePrice = 0, defaultKbPrice = 0, defaultAppraisalPrice = 0, defaultYears = 30, defaultRegion = '규제지역', defaultOwnership = '무주택', defaultIsFirstHome = false, defaultIsNewlywed = false }) {
   // 공통 입력
   const [income,         incomeChange,         incomeNum        ] = useMillionInput(defaultIncome)
   const [salePrice,      salePriceChange,      salePriceNum     ] = useMillionInput(defaultSalePrice)
@@ -287,6 +287,8 @@ export default function CompareTab({ isMobile, defaultIncome = 0, defaultSalePri
   const [isRegional,     setRegional     ] = useState(false)
 
   const [showResult, setShowResult] = useState(false)
+
+  useEffect(() => { onSalePriceChange?.(salePriceNum) }, [salePriceNum])
 
   const collateral = useMemo(() =>
     resolveCollateralValue({ appraisalPrice: appraisalNum, kbPrice: kbPriceNum, salePrice: salePriceNum })

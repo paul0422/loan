@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { calcPurchaseCost } from '../lib/calcPurchaseCost'
 
 function formatKRW(v) {
@@ -10,7 +10,7 @@ function useMillionInput(initialValue = '') {
   const [raw, setRaw] = useState(initialValue)
   const num    = raw === '' ? 0 : Math.round((parseFloat(raw) || 0) * 1_000_000)
   const onChange = e => setRaw(e.target.value.replace(/[^0-9.]/g, ''))
-  return [raw, onChange, num]
+  return [raw, onChange, num, setRaw]
 }
 
 function MoneyInput({ raw, onChange, unit, placeholder }) {
@@ -94,8 +94,11 @@ const CHART_COLORS = {
 }
 
 export default function PurchaseCostTab({ defaultPrice = 0, isMobile = false }) {
-  const defaultRaw = defaultPrice > 0 ? Math.round(defaultPrice / 1_000_000).toString() : ''
-  const [price, priceChange, priceNum] = useMillionInput(defaultRaw)
+  const [price, priceChange, priceNum, setPrice] = useMillionInput('')
+
+  useEffect(() => {
+    if (defaultPrice > 0) setPrice(Math.round(defaultPrice / 1_000_000).toString())
+  }, [defaultPrice])
   const [houseType, setHouseType]      = useState('아파트')
   const [areaOption, setAreaOption]    = useState('84')
   const [customArea, setCustomArea]    = useState('')

@@ -6,6 +6,7 @@ import { useIsMobile } from './lib/useIsMobile'
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('compare')
+  const [sharedSalePrice, setSharedSalePrice] = useState(0)
   const isMobile = useIsMobile()
 
   const tabs = [
@@ -51,8 +52,8 @@ export default function App() {
           ))}
         </div>
 
-        {activeTab === 'compare' && <CompareTab isMobile={isMobile} />}
-        {activeTab === 'cost'    && <PurchaseCostTab defaultPrice={0} isMobile={isMobile} />}
+        {activeTab === 'compare' && <CompareTab isMobile={isMobile} onSalePriceChange={setSharedSalePrice} />}
+        {activeTab === 'cost'    && <PurchaseCostTab defaultPrice={sharedSalePrice} isMobile={isMobile} />}
         {activeTab === 'guide'   && <GuideTab isMobile={isMobile} />}
 
         <footer style={{ textAlign: 'center', marginTop: 32, fontSize: 12, color: '#94a3b8' }}>
