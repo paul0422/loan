@@ -4,7 +4,10 @@ import { calcLoan } from '../lib/calcLoan'
 import { calcDidimdol } from '../lib/calcDidimdol'
 import { policyConfig } from '../config/policy'
 import FavoritesPanel from './FavoritesPanel'
+import PaymentSimulator from './PaymentSimulator'
+import RecentHistory from './RecentHistory'
 import { getFavorites, addFavorite, removeFavorite } from '../services/favoritesService'
+import { getRecentHistory, addRecentHistory, clearRecentHistory } from '../services/recentHistoryService'
 
 function formatKRW(v) {
   if (!v || isNaN(v)) return '-'
@@ -291,6 +294,7 @@ export default function CompareTab({ isMobile, onSalePriceChange, defaultIncome 
 
   const [showResult, setShowResult] = useState(false)
   const [favorites, setFavorites] = useState(() => getFavorites())
+  const [recentHistory, setRecentHistory] = useState(() => getRecentHistory())
 
   useEffect(() => { onSalePriceChange?.(salePriceNum) }, [salePriceNum])
 
@@ -307,20 +311,27 @@ export default function CompareTab({ isMobile, onSalePriceChange, defaultIncome 
     setFavorites(getFavorites())
   }
 
-  const handleLoadFavorite = (fav) => {
-    const { inputs } = fav
+  const loadInputs = (inputs) => {
     const toRaw = v => v > 0 ? String(Math.round(v / 1_000_000)) : ''
     setIncome(toRaw(inputs.income))
     setSalePrice(toRaw(inputs.salePrice))
     setKbPrice(toRaw(inputs.kbPrice))
     setAppraisal(toRaw(inputs.appraisalPrice))
-    if (inputs.years) setYears(inputs.years)
-    if (inputs.region) setRegion(inputs.region)
+    if (inputs.years)    setYears(inputs.years)
+    if (inputs.region)   setRegion(inputs.region)
     if (inputs.ownership) setOwnership(inputs.ownership)
     if (inputs.isFirstHome !== undefined) setIsFirstHome(inputs.isFirstHome)
-    if (inputs.isNewlywed !== undefined) setIsNewlywed(inputs.isNewlywed)
+    if (inputs.isNewlywed !== undefined)  setIsNewlywed(inputs.isNewlywed)
+    if (inputs.baseRate)  setBaseRate(String(inputs.baseRate))
+    if (inputs.children !== undefined)   setChildren(inputs.children)
     setShowResult(false)
   }
+
+  const handleLoadFavorite = (fav) => loadInputs(fav.inputs)
+
+  const handleLoadRecent = (entry) => loadInputs(entry.inputs)
+
+  const handleClearHistory = () => setRecentHistory(clearRecentHistory())
 
   const collateral = useMemo(() =>
     resolveCollateralValue({ appraisalPrice: appraisalNum, kbPrice: kbPriceNum, salePrice: salePriceNum })
@@ -367,6 +378,14 @@ export default function CompareTab({ isMobile, onSalePriceChange, defaultIncome 
     />
   )
 
+  const sidebar = !isMobile && (
+    <div style={{ width: 280, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <PaymentSimulator />
+      <RecentHistory history={recentHistory} onLoad={handleLoadRecent} onClear={handleClearHistory} />
+      {favPanel}
+    </div>
+  )
+
   if (showResult) {
     return (
       <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start' }}>
@@ -392,14 +411,14 @@ export default function CompareTab({ isMobile, onSalePriceChange, defaultIncome 
 
           {isMobile && <div style={{ marginTop: 16 }}>{favPanel}</div>}
         </div>
-        {!isMobile && favPanel}
+        {sidebar}
       </div>
     )
   }
 
   return (
     <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start' }}>
-      {!isMobile && <div style={{ flex: 1 }} />}
+      {!isMobile && <div style={{ width: 280, flexShrink: 0 }} />}
       <div style={isMobile ? S.cardMobile : { ...S.card, margin: 0 }}>
       <h2 style={S.cardTitle}>대출 조건 입력</h2>
 
@@ -484,7 +503,15 @@ export default function CompareTab({ isMobile, onSalePriceChange, defaultIncome 
 
       <button
         disabled={!canCompare}
-        onClick={() => setShowResult(true)}
+        onClick={() => {
+          setShowResult(true)
+          const updated = addRecentHistory(
+            { income: incomeNum, salePrice: salePriceNum, kbPrice: kbPriceNum, appraisalPrice: appraisalNum, years, region, ownership, isFirstHome, isNewlywed, baseRate: parseFloat(baseRate) || 0, children },
+            { loan: loanResult ? { finalAmount: loanResult.finalAmount, monthlyPayment: loanResult.monthlyPayment, finalRate: loanResult.finalRate, blocked: !!loanResult.blocked } : null,
+              didimdol: didimdolResult ? { loanAmount: didimdolResult.loanAmount, monthlyPayment: didimdolResult.monthlyPayment, finalRate: didimdolResult.finalRate, ineligible: !!didimdolResult.ineligible } : null }
+          )
+          setRecentHistory(updated)
+        }}
         style={{ ...S.compareBtn, opacity: canCompare ? 1 : 0.45, cursor: canCompare ? 'pointer' : 'not-allowed' }}
       >
         비교하기 →
@@ -497,7 +524,7 @@ export default function CompareTab({ isMobile, onSalePriceChange, defaultIncome 
 
         {isMobile && <div style={{ marginTop: 16 }}>{favPanel}</div>}
       </div>
-      {!isMobile && <div style={{ flex: 1 }}>{favPanel}</div>}
+      {sidebar}
     </div>
   )
 }
