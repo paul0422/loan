@@ -3,6 +3,8 @@ import { resolveCollateralValue } from '../services/priceService'
 import { calcLoan } from '../lib/calcLoan'
 import { calcDidimdol } from '../lib/calcDidimdol'
 import { policyConfig } from '../config/policy'
+import FavoritesPanel from './FavoritesPanel'
+import { getFavorites, addFavorite, removeFavorite } from '../services/favoritesService'
 
 function formatKRW(v) {
   if (!v || isNaN(v)) return '-'
@@ -13,8 +15,9 @@ function useMillionInput(initNum = 0) {
   const initRaw = initNum > 0 ? String(Math.round(initNum / 1_000_000)) : ''
   const [raw, setRaw] = useState(initRaw)
   const num = raw === '' ? 0 : Math.round((parseFloat(raw) || 0) * 1_000_000)
+
   const onChange = e => setRaw(e.target.value.replace(/[^0-9.]/g, ''))
-  return [raw, onChange, num]
+  return [raw, onChange, num, setRaw]
 }
 
 function Label({ text, required }) {
@@ -264,10 +267,10 @@ function EquityBox({ salePriceNum, loanAmount, monthly }) {
 // ── 메인 컴포넌트 ─────────────────────────────────────────────────
 export default function CompareTab({ isMobile, onSalePriceChange, defaultIncome = 0, defaultSalePrice = 0, defaultKbPrice = 0, defaultAppraisalPrice = 0, defaultYears = 30, defaultRegion = '규제지역', defaultOwnership = '무주택', defaultIsFirstHome = false, defaultIsNewlywed = false }) {
   // 공통 입력
-  const [income,         incomeChange,         incomeNum        ] = useMillionInput(defaultIncome)
-  const [salePrice,      salePriceChange,      salePriceNum     ] = useMillionInput(defaultSalePrice)
-  const [kbPrice,        kbPriceChange,        kbPriceNum       ] = useMillionInput(defaultKbPrice)
-  const [appraisalPrice, appraisalPriceChange, appraisalNum     ] = useMillionInput(defaultAppraisalPrice)
+  const [income,         incomeChange,         incomeNum,  setIncome      ] = useMillionInput(defaultIncome)
+  const [salePrice,      salePriceChange,      salePriceNum, setSalePrice ] = useMillionInput(defaultSalePrice)
+  const [kbPrice,        kbPriceChange,        kbPriceNum, setKbPrice     ] = useMillionInput(defaultKbPrice)
+  const [appraisalPrice, appraisalPriceChange, appraisalNum, setAppraisal ] = useMillionInput(defaultAppraisalPrice)
   const [years,          setYears             ] = useState(defaultYears)
 
   // 공통 조건
@@ -287,8 +290,37 @@ export default function CompareTab({ isMobile, onSalePriceChange, defaultIncome 
   const [isRegional,     setRegional     ] = useState(false)
 
   const [showResult, setShowResult] = useState(false)
+  const [favorites, setFavorites] = useState(() => getFavorites())
 
   useEffect(() => { onSalePriceChange?.(salePriceNum) }, [salePriceNum])
+
+  const handleSaveFavorite = (name) => {
+    addFavorite(name,
+      { income: incomeNum, salePrice: salePriceNum, kbPrice: kbPriceNum, appraisalPrice: appraisalNum, years, region, ownership, isFirstHome, isNewlywed },
+      { finalAmount: loanResult?.finalAmount, monthlyPayment: loanResult?.monthlyPayment, didimdolAmount: didimdolResult?.loanAmount, didimdolMonthly: didimdolResult?.monthlyPayment }
+    )
+    setFavorites(getFavorites())
+  }
+
+  const handleRemoveFavorite = (id) => {
+    removeFavorite(id)
+    setFavorites(getFavorites())
+  }
+
+  const handleLoadFavorite = (fav) => {
+    const { inputs } = fav
+    const toRaw = v => v > 0 ? String(Math.round(v / 1_000_000)) : ''
+    setIncome(toRaw(inputs.income))
+    setSalePrice(toRaw(inputs.salePrice))
+    setKbPrice(toRaw(inputs.kbPrice))
+    setAppraisal(toRaw(inputs.appraisalPrice))
+    if (inputs.years) setYears(inputs.years)
+    if (inputs.region) setRegion(inputs.region)
+    if (inputs.ownership) setOwnership(inputs.ownership)
+    if (inputs.isFirstHome !== undefined) setIsFirstHome(inputs.isFirstHome)
+    if (inputs.isNewlywed !== undefined) setIsNewlywed(inputs.isNewlywed)
+    setShowResult(false)
+  }
 
   const collateral = useMemo(() =>
     resolveCollateralValue({ appraisalPrice: appraisalNum, kbPrice: kbPriceNum, salePrice: salePriceNum })
@@ -324,6 +356,17 @@ export default function CompareTab({ isMobile, onSalePriceChange, defaultIncome 
   const didimdolMonthly = didimdolResult?.monthlyPayment ?? 0
   const monthlyDiff = Math.abs(loanMonthly - didimdolMonthly)
 
+  const favPanel = (
+    <FavoritesPanel
+      favorites={favorites}
+      salePriceNum={salePriceNum}
+      onSaveFavorite={handleSaveFavorite}
+      onRemoveFavorite={handleRemoveFavorite}
+      onLoadFavorite={handleLoadFavorite}
+      isMobile={isMobile}
+    />
+  )
+
   if (showResult) {
     return (
       <div>
@@ -345,6 +388,8 @@ export default function CompareTab({ isMobile, onSalePriceChange, defaultIncome 
         <div style={{ marginTop: 12, fontSize: 11, color: '#94a3b8', textAlign: 'center', lineHeight: 1.6 }}>
           * 실제 대출 조건은 금융기관 심사 결과에 따라 달라질 수 있습니다
         </div>
+
+        <div style={{ marginTop: 20 }}>{favPanel}</div>
       </div>
     )
   }
@@ -444,6 +489,8 @@ export default function CompareTab({ isMobile, onSalePriceChange, defaultIncome 
           소득, 매매가, 기본 금리(*) 입력 후 비교 가능합니다
         </p>
       )}
+
+      <div style={{ marginTop: 20 }}>{favPanel}</div>
     </div>
   )
 }
