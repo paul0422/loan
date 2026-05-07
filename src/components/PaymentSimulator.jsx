@@ -5,6 +5,11 @@ function formatKRW(v) {
   return '₩' + Math.round(v).toLocaleString('ko-KR')
 }
 
+function toEok(amountInMillion) {
+  const v = amountInMillion / 100
+  return v % 1 === 0 ? `${v}억` : `${v.toFixed(1)}억`
+}
+
 function calcMonthly(principal, annualRate, years) {
   if (!principal || !annualRate || !years) return 0
   const r = annualRate / 100 / 12
@@ -32,7 +37,7 @@ export default function PaymentSimulator() {
       <div style={S.field}>
         <div style={S.row}>
           <span style={S.label}>대출금액</span>
-          <span style={S.val}>{amount.toLocaleString()}백만</span>
+          <span style={S.val}>{toEok(amount)}</span>
         </div>
         <input type="range" min={50} max={1000} step={10} value={amount}
           onChange={e => setAmount(+e.target.value)} style={S.slider} />

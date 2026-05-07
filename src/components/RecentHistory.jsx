@@ -3,6 +3,11 @@ function formatKRW(v) {
   return '₩' + Math.round(v).toLocaleString('ko-KR')
 }
 
+function toEok(won) {
+  const v = won / 100_000_000
+  return v % 1 === 0 ? `${v}억` : `${v.toFixed(1)}억`
+}
+
 function timeAgo(ts) {
   const diff = Date.now() - ts
   const m = Math.floor(diff / 60_000)
@@ -34,7 +39,7 @@ export default function RecentHistory({ history, onLoad, onClear }) {
           return (
             <div key={entry.id} style={S.item}>
               <div style={S.itemTop}>
-                <span style={S.price}>매매가 {Math.round(inputs.salePrice / 1_000_000).toLocaleString()}백만</span>
+                <span style={S.price}>매매가 {toEok(inputs.salePrice)}</span>
                 <span style={S.time}>{timeAgo(entry.timestamp)}</span>
               </div>
               <div style={S.results}>
