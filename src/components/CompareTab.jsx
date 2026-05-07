@@ -399,7 +399,8 @@ export default function CompareTab({ isMobile, onSalePriceChange, defaultIncome 
 
   return (
     <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start' }}>
-      <div style={isMobile ? S.cardMobile : { ...S.card, flex: 1, margin: 0 }}>
+      {!isMobile && <div style={{ flex: 1 }} />}
+      <div style={isMobile ? S.cardMobile : { ...S.card, margin: 0 }}>
       <h2 style={S.cardTitle}>대출 조건 입력</h2>
 
       <SectionHeader title="공통 — 소득 · 주택 정보" />
@@ -496,7 +497,7 @@ export default function CompareTab({ isMobile, onSalePriceChange, defaultIncome 
 
         {isMobile && <div style={{ marginTop: 16 }}>{favPanel}</div>}
       </div>
-      {!isMobile && favPanel}
+      {!isMobile && <div style={{ flex: 1 }}>{favPanel}</div>}
     </div>
   )
 }
