@@ -50,8 +50,8 @@ export default function FavoritesPanel({
         ...S.panel,
         width: '100%',
         maxHeight: 'none',
-        borderLeft: 'none',
-        borderTop: '1px solid #e2e8f0',
+        borderRadius: 14,
+        boxShadow: '0 2px 12px rgba(0,0,0,0.05)',
         padding: '14px 12px',
       }
     : S.panel
@@ -233,11 +233,13 @@ export default function FavoritesPanel({
 
 const S = {
   panel: {
-    width: 320,
+    width: 280,
+    flexShrink: 0,
     background: '#fff',
-    borderLeft: '1px solid #e2e8f0',
+    borderRadius: 20,
+    boxShadow: '0 4px 24px rgba(0,0,0,0.07)',
     overflowY: 'auto',
-    maxHeight: '100vh',
+    maxHeight: '80vh',
     padding: '20px 16px',
     fontSize: 13,
     boxSizing: 'border-box',

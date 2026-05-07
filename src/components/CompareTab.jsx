@@ -369,33 +369,37 @@ export default function CompareTab({ isMobile, onSalePriceChange, defaultIncome 
 
   if (showResult) {
     return (
-      <div>
-        <button onClick={() => setShowResult(false)} style={S.backBtn}>← 다시 입력</button>
+      <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start' }}>
+        <div style={{ flex: '1 1 0', minWidth: 0 }}>
+          <button onClick={() => setShowResult(false)} style={S.backBtn}>← 다시 입력</button>
 
-        {loanResult && didimdolResult && !didimdolResult.ineligible && !loanResult.blocked && (
-          <div style={S.summaryBanner}>
-            {didimdolResult.finalRate < (loanResult.finalRate ?? 99)
-              ? `💡 디딤돌 대출이 월 ${formatKRW(monthlyDiff)} 더 저렴합니다`
-              : `💡 일반 주담대 한도가 ${formatKRW(loanAmount - didimdolAmt)} 더 많습니다`}
+          {loanResult && didimdolResult && !didimdolResult.ineligible && !loanResult.blocked && (
+            <div style={S.summaryBanner}>
+              {didimdolResult.finalRate < (loanResult.finalRate ?? 99)
+                ? `💡 디딤돌 대출이 월 ${formatKRW(monthlyDiff)} 더 저렴합니다`
+                : `💡 일반 주담대 한도가 ${formatKRW(loanAmount - didimdolAmt)} 더 많습니다`}
+            </div>
+          )}
+
+          <div style={{ display: 'flex', gap: 16, flexDirection: isMobile ? 'column' : 'row', marginTop: 16, alignItems: isMobile ? 'stretch' : 'flex-start' }}>
+            <LoanCard result={loanResult} salePriceNum={salePriceNum} collateral={collateral} isBetter={loanBetter} />
+            <DidimdolCard result={didimdolResult} salePriceNum={salePriceNum} collateral={collateral} isBetter={didimdolBetter} />
           </div>
-        )}
 
-        <div style={{ display: 'flex', gap: 16, flexDirection: isMobile ? 'column' : 'row', marginTop: 16, alignItems: isMobile ? 'stretch' : 'flex-start' }}>
-          <LoanCard result={loanResult} salePriceNum={salePriceNum} collateral={collateral} isBetter={loanBetter} />
-          <DidimdolCard result={didimdolResult} salePriceNum={salePriceNum} collateral={collateral} isBetter={didimdolBetter} />
+          <div style={{ marginTop: 12, fontSize: 11, color: '#94a3b8', textAlign: 'center', lineHeight: 1.6 }}>
+            * 실제 대출 조건은 금융기관 심사 결과에 따라 달라질 수 있습니다
+          </div>
+
+          {isMobile && <div style={{ marginTop: 16 }}>{favPanel}</div>}
         </div>
-
-        <div style={{ marginTop: 12, fontSize: 11, color: '#94a3b8', textAlign: 'center', lineHeight: 1.6 }}>
-          * 실제 대출 조건은 금융기관 심사 결과에 따라 달라질 수 있습니다
-        </div>
-
-        <div style={{ marginTop: 20 }}>{favPanel}</div>
+        {!isMobile && favPanel}
       </div>
     )
   }
 
   return (
-    <div style={isMobile ? S.cardMobile : S.card}>
+    <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start' }}>
+      <div style={isMobile ? S.cardMobile : { ...S.card, flex: 1, margin: 0 }}>
       <h2 style={S.cardTitle}>대출 조건 입력</h2>
 
       <SectionHeader title="공통 — 소득 · 주택 정보" />
@@ -490,7 +494,9 @@ export default function CompareTab({ isMobile, onSalePriceChange, defaultIncome 
         </p>
       )}
 
-      <div style={{ marginTop: 20 }}>{favPanel}</div>
+        {isMobile && <div style={{ marginTop: 16 }}>{favPanel}</div>}
+      </div>
+      {!isMobile && favPanel}
     </div>
   )
 }
